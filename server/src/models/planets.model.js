@@ -1,5 +1,6 @@
-const { parse } = require('csv-parse');
 const fs = require('fs');
+const path = require('path')
+const { parse } = require('csv-parse');
 
 const habitablePlanets = [];
 
@@ -29,34 +30,31 @@ function sortPlanets(planets, sortBy) {
     })
 }
 
-fs.createReadStream('kepler_data.csv')
-    .pipe(parse({
-        comment: '#',
-        columns: true,
-    })) 
-    .on('data', (data) => {
-        if(isHabitablePlanet(data)) {
-            habitablePlanets.push(data);
-        }
-    })
-    .on('error', (err) => {
-        console.log(err);
-    })
-    .on('end', () => {
-        console.log(`${habitablePlanets.length} habitable planets found!`);
-        
-        if (habitablePlanets.length > 0) {
-            const sortedByRadius = sortPlanets(habitablePlanets, 'koi_prad');
-
-            console.log("Habitable planets sorted by radius:");
-            sortedByRadius.forEach(planet => {
-                console.log(`${planet['kepler_name']} - Radius: ${planet['koi_prad']}`);
+function loadPlanetsData() {    
+    return new Promise((resolve, reject) => {
+            fs.createReadStream(path.join(__dirname, '..', '..', 'data', 'kepler_data.csv'))
+            .pipe(parse({
+                comment: '#',
+                columns: true,
+            })) 
+            .on('data', (data) => {
+                if(isHabitablePlanet(data)) {
+                    habitablePlanets.push(data);
+                }
+            })
+            .on('error', (err) => {
+                console.log(err);
+                reject(err);
+            })
+            .on('end', () => {
+                console.log(`${habitablePlanets.length} habitable planets found!`);
+                resolve();
             });
-        } else {
-            console.log("No habitable planets found for sorting.");
-        }
-    });
+        });
+}
+
 
 module.exports = {
+    loadPlanetsData,
     planets: habitablePlanets,
 };
