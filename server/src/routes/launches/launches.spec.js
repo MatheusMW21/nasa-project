@@ -4,7 +4,7 @@ const app = require('../../app');
 describe('Test GET /launches', () => {
     test('It should respond with 200 sucess', async () => {
         const response = await request(app).get('/launches');
-        expect(response).toBe(200);
+        expect(response.statusCode).toBe(200);
     });
 });
 
